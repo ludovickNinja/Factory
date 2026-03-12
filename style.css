@@ -110,7 +110,7 @@ select {
 .po-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1040px;
+  min-width: 1160px;
 }
 
 .po-table th,

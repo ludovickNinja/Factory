@@ -10,7 +10,10 @@ const purchaseOrders = [
   {
     poNumber: '660371',
     dateOrdered: '03/11/2026',
-    vendor: 'CREATIONS GEMS & JEWELLERY PVT. LTD',
+    skuLines: [
+      { sku: 'GEM-RG-001', quantity: 120 },
+      { sku: 'GEM-PD-014', quantity: 80 },
+    ],
     orderProfile: 'Re-Order',
     status: 'Sent',
     dateNeeded: '03/24/2026',
@@ -19,7 +22,11 @@ const purchaseOrders = [
   {
     poNumber: '660380',
     dateOrdered: '03/11/2026',
-    vendor: 'CREATIONS GEMS & JEWELLERY PVT. LTD',
+    skuLines: [
+      { sku: 'GEM-RG-009', quantity: 140 },
+      { sku: 'GEM-ER-002', quantity: 60 },
+      { sku: 'GEM-BR-031', quantity: 30 },
+    ],
     orderProfile: 'Re-Order',
     status: 'Received',
     dateNeeded: '03/20/2026',
@@ -28,7 +35,10 @@ const purchaseOrders = [
   {
     poNumber: '660390',
     dateOrdered: '03/11/2026',
-    vendor: 'CREATIONS GEMS & JEWELLERY PVT. LTD',
+    skuLines: [
+      { sku: 'GEM-NK-022', quantity: 90 },
+      { sku: 'GEM-RG-020', quantity: 75 },
+    ],
     orderProfile: 'Re-Order',
     status: 'In Production',
     dateNeeded: '03/24/2026',
@@ -37,7 +47,11 @@ const purchaseOrders = [
   {
     poNumber: '660356',
     dateOrdered: '03/11/2026',
-    vendor: 'CREATIONS GEMS & JEWELLERY PVT. LTD',
+    skuLines: [
+      { sku: 'GEM-ER-017', quantity: 50 },
+      { sku: 'GEM-BR-011', quantity: 40 },
+      { sku: 'GEM-RG-003', quantity: 35 },
+    ],
     orderProfile: 'Re-Order',
     status: 'Need More Time',
     dateNeeded: '03/24/2026',
@@ -46,7 +60,7 @@ const purchaseOrders = [
   {
     poNumber: '660333',
     dateOrdered: '03/11/2026',
-    vendor: 'CREATIONS GEMS & JEWELLERY PVT. LTD',
+    skuLines: [{ sku: 'GEM-NK-010', quantity: 100 }],
     orderProfile: 'New Design',
     status: 'Shipped',
     dateNeeded: '03/20/2026',
@@ -96,7 +110,7 @@ function renderPurchaseOrders() {
 
   if (filteredOrders.length === 0) {
     poTableBody.innerHTML =
-      '<tr><td class="empty-row" colspan="9">No purchase orders match your filters.</td></tr>';
+      '<tr><td class="empty-row" colspan="10">No purchase orders match your filters.</td></tr>';
     updateBulkUi(filteredOrders);
     return;
   }
@@ -116,7 +130,8 @@ function renderPurchaseOrders() {
           </td>
           <td>${order.poNumber}</td>
           <td>${order.dateOrdered}</td>
-          <td>${order.vendor}</td>
+          <td>${order.skuLines.map((line) => line.sku).join(', ')}</td>
+          <td>${order.skuLines.reduce((sum, line) => sum + line.quantity, 0)}</td>
           <td>${order.orderProfile}</td>
           <td><span class="${statusClassName(order.status)}">${order.status}</span></td>
           <td>${order.dateNeeded}</td>
