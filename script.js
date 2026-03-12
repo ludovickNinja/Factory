@@ -5,6 +5,8 @@ const selectAllCheckbox = document.getElementById('select-all');
 const selectionCount = document.getElementById('selection-count');
 const bulkReceivedButton = document.getElementById('bulk-received');
 const bulkDownloadButton = document.getElementById('bulk-download');
+const bulkDownloadErpButton = document.getElementById('bulk-download-erp');
+const bulkConfirmShippedButton = document.getElementById('bulk-confirm-shipped');
 
 const purchaseOrders = [
   {
@@ -94,6 +96,8 @@ function updateBulkUi(filteredOrders) {
   const hasAnySelection = selectedPoNumbers.size > 0;
   bulkReceivedButton.disabled = !hasAnySelection;
   bulkDownloadButton.disabled = !hasAnySelection;
+  bulkDownloadErpButton.disabled = !hasAnySelection;
+  bulkConfirmShippedButton.disabled = !hasAnySelection;
 
   if (visiblePoNumbers.length === 0) {
     selectAllCheckbox.checked = false;
@@ -220,6 +224,33 @@ function bulkDownloadJobBags() {
   alert(`Bulk job bag download queued for PO(s): ${poList}`);
 }
 
+
+function bulkDownloadErpExcels() {
+  if (selectedPoNumbers.size === 0) {
+    return;
+  }
+
+  purchaseOrders
+    .filter((order) => selectedPoNumbers.has(order.poNumber))
+    .forEach((order) => {
+      downloadPoRequestExcel(order);
+    });
+}
+
+function bulkConfirmShipped() {
+  if (selectedPoNumbers.size === 0) {
+    return;
+  }
+
+  purchaseOrders.forEach((order) => {
+    if (selectedPoNumbers.has(order.poNumber)) {
+      order.status = 'Shipped';
+    }
+  });
+
+  renderPurchaseOrders();
+}
+
 function handlePoAction(action, poNumber) {
   const order = purchaseOrders.find((item) => item.poNumber === poNumber);
   if (!order) {
@@ -309,5 +340,7 @@ poTableBody.addEventListener('click', (event) => {
 
 bulkReceivedButton.addEventListener('click', bulkMarkReceived);
 bulkDownloadButton.addEventListener('click', bulkDownloadJobBags);
+bulkDownloadErpButton.addEventListener('click', bulkDownloadErpExcels);
+bulkConfirmShippedButton.addEventListener('click', bulkConfirmShipped);
 
 renderPurchaseOrders();
