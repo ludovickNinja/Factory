@@ -105,6 +105,50 @@ function updateBulkUi(filteredOrders) {
   selectAllCheckbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visiblePoNumbers.length;
 }
 
+function escapeCsvCell(value) {
+  const escaped = String(value).replaceAll('"', '""');
+  return `"${escaped}"`;
+}
+
+function downloadPoRequestExcel(order) {
+  const headers = [
+    'PO Number',
+    'Date Ordered',
+    'Date Needed',
+    'Order Profile',
+    'Status',
+    'Rush',
+    'SKU',
+    'Quantity',
+  ];
+
+  const csvRows = [headers.join(',')];
+
+  order.skuLines.forEach((line) => {
+    csvRows.push(
+      [
+        order.poNumber,
+        order.dateOrdered,
+        order.dateNeeded,
+        order.orderProfile,
+        order.status,
+        order.rush ? 'Yes' : 'No',
+        line.sku,
+        line.quantity,
+      ]
+        .map(escapeCsvCell)
+        .join(',')
+    );
+  });
+
+  const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const downloadLink = document.createElement('a');
+  downloadLink.href = URL.createObjectURL(csvBlob);
+  downloadLink.download = `PO-${order.poNumber}-erp-request.csv`;
+  downloadLink.click();
+  URL.revokeObjectURL(downloadLink.href);
+}
+
 function renderPurchaseOrders() {
   const filteredOrders = getFilteredOrders();
 
@@ -138,10 +182,11 @@ function renderPurchaseOrders() {
           <td>${order.rush ? '✓' : '—'}</td>
           <td>
             <div class="action-group">
-              <button type="button" class="table-btn">Download Job Bag</button>
-              <button type="button" class="table-btn">Confirm Received</button>
-              <button type="button" class="table-btn">Mark Shipped</button>
-              <button type="button" class="table-btn subtle">Need More Time</button>
+              <button type="button" class="table-btn" data-action="download-job-bag" data-po-number="${order.poNumber}">Download Job Bag</button>
+              <button type="button" class="table-btn" data-action="download-erp-excel" data-po-number="${order.poNumber}">Download ERP Excel</button>
+              <button type="button" class="table-btn" data-action="confirm-received" data-po-number="${order.poNumber}">Confirm Received</button>
+              <button type="button" class="table-btn" data-action="mark-shipped" data-po-number="${order.poNumber}">Mark Shipped</button>
+              <button type="button" class="table-btn subtle" data-action="need-more-time" data-po-number="${order.poNumber}">Need More Time</button>
             </div>
           </td>
         </tr>
@@ -173,6 +218,40 @@ function bulkDownloadJobBags() {
 
   const poList = [...selectedPoNumbers].sort().join(', ');
   alert(`Bulk job bag download queued for PO(s): ${poList}`);
+}
+
+function handlePoAction(action, poNumber) {
+  const order = purchaseOrders.find((item) => item.poNumber === poNumber);
+  if (!order) {
+    return;
+  }
+
+  if (action === 'download-job-bag') {
+    alert(`Job bag download queued for PO ${poNumber}`);
+    return;
+  }
+
+  if (action === 'download-erp-excel') {
+    downloadPoRequestExcel(order);
+    return;
+  }
+
+  if (action === 'confirm-received') {
+    order.status = 'Received';
+    renderPurchaseOrders();
+    return;
+  }
+
+  if (action === 'mark-shipped') {
+    order.status = 'Shipped';
+    renderPurchaseOrders();
+    return;
+  }
+
+  if (action === 'need-more-time') {
+    order.status = 'Need More Time';
+    renderPurchaseOrders();
+  }
 }
 
 poSearchInput.addEventListener('input', renderPurchaseOrders);
@@ -210,6 +289,22 @@ poTableBody.addEventListener('change', (event) => {
   }
 
   renderPurchaseOrders();
+});
+
+poTableBody.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement) || !target.classList.contains('table-btn')) {
+    return;
+  }
+
+  const action = target.dataset.action;
+  const poNumber = target.dataset.poNumber;
+
+  if (!action || !poNumber) {
+    return;
+  }
+
+  handlePoAction(action, poNumber);
 });
 
 bulkReceivedButton.addEventListener('click', bulkMarkReceived);
