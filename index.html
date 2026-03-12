@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Factory Dashboard | POs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <article class="card">
+        <header class="page-header">
+          <h1>Factory Dashboard</h1>
+          <p>
+            Daily purchase order queue for downloading job bags, confirming receipt, marking
+            shipments, and requesting more production time.
+          </p>
+        </header>
+
+        <section class="po-section" aria-labelledby="po-title">
+          <div class="po-section-header">
+            <h2 id="po-title">POs</h2>
+            <div class="filters" aria-label="PO filters">
+              <label>
+                Search PO #
+                <input type="search" id="po-search" placeholder="Enter PO number" />
+              </label>
+              <label>
+                Status
+                <select id="status-filter">
+                  <option value="all">All statuses</option>
+                  <option value="Sent">Sent</option>
+                  <option value="Received">Received</option>
+                  <option value="In Production">In Production</option>
+                  <option value="Need More Time">Need More Time</option>
+                  <option value="Shipped">Shipped</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="bulk-actions" aria-label="Bulk actions">
+            <span id="selection-count">0 selected</span>
+            <button type="button" id="bulk-received" class="bulk-btn">Bulk Confirm Received</button>
+            <button type="button" id="bulk-download" class="bulk-btn">Bulk Download Job Bags</button>
+          </div>
+
+          <div class="table-wrap" role="region" aria-label="Factory purchase order list">
+            <table class="po-table">
+              <thead>
+                <tr>
+                  <th>
+                    <input id="select-all" type="checkbox" aria-label="Select all visible purchase orders" />
+                  </th>
+                  <th>PO #</th>
+                  <th>Date Ordered</th>
+                  <th>Vendor</th>
+                  <th>Order Profile</th>
+                  <th>Status</th>
+                  <th>Date Needed</th>
+                  <th>Rush</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="po-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
