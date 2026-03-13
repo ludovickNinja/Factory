@@ -36,6 +36,14 @@
                   <option value="Shipped">Shipped</option>
                 </select>
               </label>
+              <label>
+                Order Date
+                <input type="date" id="order-date-filter" />
+              </label>
+              <label>
+                Date Needed
+                <input type="date" id="date-needed-filter" />
+              </label>
             </div>
           </div>
 
@@ -66,14 +74,14 @@
                   <th>
                     <input id="select-all" type="checkbox" aria-label="Select all visible purchase orders" />
                   </th>
-                  <th>PO #</th>
-                  <th>Date Ordered</th>
-                  <th>SKU</th>
-                  <th>Total PCS</th>
-                  <th>Order Profile</th>
-                  <th>Status</th>
-                  <th>Date Needed</th>
-                  <th>Rush</th>
+                  <th><button type="button" class="sort-btn" data-sort-key="poNumber">PO #</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="dateOrdered">Date Ordered</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="sku">SKU</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="totalPcs">Total PCS</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="orderProfile">Order Profile</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="status">Status</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="dateNeeded">Date Needed</button></th>
+                  <th><button type="button" class="sort-btn" data-sort-key="rush">Rush</button></th>
                   <th>Actions</th>
                 </tr>
               </thead>

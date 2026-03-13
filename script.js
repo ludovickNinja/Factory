@@ -1,12 +1,15 @@
 const poTableBody = document.getElementById('po-table-body');
 const poSearchInput = document.getElementById('po-search');
 const statusFilter = document.getElementById('status-filter');
+const orderDateFilter = document.getElementById('order-date-filter');
+const dateNeededFilter = document.getElementById('date-needed-filter');
 const selectAllCheckbox = document.getElementById('select-all');
 const selectionCount = document.getElementById('selection-count');
 const bulkReceivedButton = document.getElementById('bulk-received');
 const bulkDownloadButton = document.getElementById('bulk-download');
 const bulkDownloadErpButton = document.getElementById('bulk-download-erp');
 const bulkConfirmShippedButton = document.getElementById('bulk-confirm-shipped');
+const sortButtons = document.querySelectorAll('.sort-btn');
 
 const purchaseOrders = [
   {
@@ -71,24 +74,109 @@ const purchaseOrders = [
 ];
 
 const selectedPoNumbers = new Set();
+const currentSort = {
+  key: null,
+  direction: 'asc',
+};
 
 function statusClassName(status) {
   return `status-pill status-${status.toLowerCase().replace(/\s+/g, '-')}`;
 }
 
-function getFilteredOrders() {
-  const searchValue = poSearchInput.value.trim().toLowerCase();
-  const selectedStatus = statusFilter.value;
+function formatDateForComparison(mmDdYyyyDate) {
+  const [month, day, year] = mmDdYyyyDate.split('/');
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
 
-  return purchaseOrders.filter((order) => {
-    const matchesSearch = order.poNumber.toLowerCase().includes(searchValue);
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
-    return matchesSearch && matchesStatus;
+function getSortValue(order, key) {
+  if (key === 'poNumber') {
+    return Number(order.poNumber);
+  }
+
+  if (key === 'dateOrdered') {
+    return formatDateForComparison(order.dateOrdered);
+  }
+
+  if (key === 'sku') {
+    return order.skuLines.map((line) => line.sku).join(', ');
+  }
+
+  if (key === 'totalPcs') {
+    return order.skuLines.reduce((sum, line) => sum + line.quantity, 0);
+  }
+
+  if (key === 'orderProfile') {
+    return order.orderProfile;
+  }
+
+  if (key === 'status') {
+    return order.status;
+  }
+
+  if (key === 'dateNeeded') {
+    return formatDateForComparison(order.dateNeeded);
+  }
+
+  if (key === 'rush') {
+    return order.rush ? 1 : 0;
+  }
+
+  return '';
+}
+
+function sortOrders(orders) {
+  if (!currentSort.key) {
+    return orders;
+  }
+
+  return [...orders].sort((a, b) => {
+    const aValue = getSortValue(a, currentSort.key);
+    const bValue = getSortValue(b, currentSort.key);
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+
+    const result = String(aValue).localeCompare(String(bValue));
+    return currentSort.direction === 'asc' ? result : -result;
   });
 }
 
-function updateBulkUi(filteredOrders) {
-  const visiblePoNumbers = filteredOrders.map((order) => order.poNumber);
+function getVisibleOrders() {
+  const searchValue = poSearchInput.value.trim().toLowerCase();
+  const selectedStatus = statusFilter.value;
+  const selectedOrderDate = orderDateFilter.value;
+  const selectedDateNeeded = dateNeededFilter.value;
+
+  const filteredOrders = purchaseOrders.filter((order) => {
+    const matchesSearch = order.poNumber.toLowerCase().includes(searchValue);
+    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
+    const matchesOrderDate = !selectedOrderDate || formatDateForComparison(order.dateOrdered) === selectedOrderDate;
+    const matchesDateNeeded = !selectedDateNeeded || formatDateForComparison(order.dateNeeded) === selectedDateNeeded;
+
+    return matchesSearch && matchesStatus && matchesOrderDate && matchesDateNeeded;
+  });
+
+  return sortOrders(filteredOrders);
+}
+
+function updateSortUi() {
+  sortButtons.forEach((button) => {
+    const key = button.dataset.sortKey;
+
+    if (key !== currentSort.key) {
+      button.textContent = button.textContent.replace(/\s[↑↓]$/, '');
+      return;
+    }
+
+    const baseText = button.textContent.replace(/\s[↑↓]$/, '');
+    const arrow = currentSort.direction === 'asc' ? '↑' : '↓';
+    button.textContent = `${baseText} ${arrow}`;
+  });
+}
+
+function updateBulkUi(visibleOrders) {
+  const visiblePoNumbers = visibleOrders.map((order) => order.poNumber);
   const selectedVisibleCount = visiblePoNumbers.filter((poNumber) => selectedPoNumbers.has(poNumber)).length;
 
   selectionCount.textContent = `${selectedPoNumbers.size} selected`;
@@ -154,16 +242,17 @@ function downloadPoRequestExcel(order) {
 }
 
 function renderPurchaseOrders() {
-  const filteredOrders = getFilteredOrders();
+  const visibleOrders = getVisibleOrders();
 
-  if (filteredOrders.length === 0) {
+  if (visibleOrders.length === 0) {
     poTableBody.innerHTML =
       '<tr><td class="empty-row" colspan="10">No purchase orders match your filters.</td></tr>';
-    updateBulkUi(filteredOrders);
+    updateBulkUi(visibleOrders);
+    updateSortUi();
     return;
   }
 
-  poTableBody.innerHTML = filteredOrders
+  poTableBody.innerHTML = visibleOrders
     .map(
       (order) => `
         <tr>
@@ -198,7 +287,8 @@ function renderPurchaseOrders() {
     )
     .join('');
 
-  updateBulkUi(filteredOrders);
+  updateBulkUi(visibleOrders);
+  updateSortUi();
 }
 
 function bulkMarkReceived() {
@@ -223,7 +313,6 @@ function bulkDownloadJobBags() {
   const poList = [...selectedPoNumbers].sort().join(', ');
   alert(`Bulk job bag download queued for PO(s): ${poList}`);
 }
-
 
 function bulkDownloadErpExcels() {
   if (selectedPoNumbers.size === 0) {
@@ -287,11 +376,32 @@ function handlePoAction(action, poNumber) {
 
 poSearchInput.addEventListener('input', renderPurchaseOrders);
 statusFilter.addEventListener('change', renderPurchaseOrders);
+orderDateFilter.addEventListener('change', renderPurchaseOrders);
+dateNeededFilter.addEventListener('change', renderPurchaseOrders);
+
+sortButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const key = button.dataset.sortKey;
+
+    if (!key) {
+      return;
+    }
+
+    if (currentSort.key === key) {
+      currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort.key = key;
+      currentSort.direction = 'asc';
+    }
+
+    renderPurchaseOrders();
+  });
+});
 
 selectAllCheckbox.addEventListener('change', () => {
-  const filteredOrders = getFilteredOrders();
+  const visibleOrders = getVisibleOrders();
 
-  filteredOrders.forEach((order) => {
+  visibleOrders.forEach((order) => {
     if (selectAllCheckbox.checked) {
       selectedPoNumbers.add(order.poNumber);
     } else {
