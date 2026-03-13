@@ -58,6 +58,7 @@ body {
 .filters {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .bulk-actions {
@@ -100,7 +101,7 @@ select {
   border-radius: 8px;
   padding: 8px 10px;
   font: inherit;
-  min-width: 160px;
+  min-width: 150px;
 }
 
 .table-wrap {
@@ -116,12 +117,12 @@ select {
 
 .col-select { width: 40px; }
 .col-po { width: 74px; }
-.col-date-ordered { width: 104px; }
+.col-date-ordered { width: 110px; }
 .col-sku { width: 300px; }
 .col-total { width: 84px; }
-.col-profile { width: 108px; }
+.col-profile { width: 112px; }
 .col-status { width: 128px; }
-.col-date-needed { width: 104px; }
+.col-date-needed { width: 110px; }
 .col-rush { width: 56px; }
 .col-actions { width: 170px; }
 
@@ -142,6 +143,21 @@ select {
 .po-table th {
   background: #f8fafc;
   font-size: 0.86rem;
+}
+
+.sort-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  text-decoration: underline;
 }
 
 #select-all,
